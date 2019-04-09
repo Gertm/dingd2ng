@@ -52,27 +52,33 @@ echo("** Connecting to IRC on server: ", server, " with nickname ", nickname,
 echo("***********************************************************************")
      
 proc onIrcEvent(client: AsyncIrc, event: IrcEvent) {.async.} =
-  case event.typ
-  of EvConnected:
-    for cmd in connect_cmds:
-      await client.send(cmd)
-  of EvDisconnected, EvTimeout:
-    await client.reconnect()
-  of EvMsg:
-    if event.cmd == MPrivMsg:
-      var msg = event.params[event.params.len-1]
-      # if msg == "!test": await client.privmsg(event.origin, "hello")
-      if msg == "!lag":
-        await client.privmsg(event.origin, formatFloat(client.getLag))
-      if unicode.toLower(msg).contains("http"):
-        for part in msg.split(' '):
-          if unicode.toLower(part).startsWith("http"):
-            let title = htmltitle.readTitle(part)
-            if title.len() != 0:
-              await client.privmsg(event.origin, title)
-      if unicode.tolower(msg).startsWith("!say"):
-        await client.privmsg(event.origin, "You just said it.")
-    echo(event.raw)
+  try:
+    case event.typ
+    of EvConnected:
+      for cmd in connect_cmds:
+        await client.send(cmd)
+    of EvDisconnected, EvTimeout:
+      await client.reconnect()
+    of EvMsg:
+      if event.cmd == MPrivMsg:
+        var msg = event.params[event.params.len-1]
+        # if msg == "!test": await client.privmsg(event.origin, "hello")
+        if msg == "!lag":
+          await client.privmsg(event.origin, formatFloat(client.getLag))
+        if unicode.toLower(msg).contains("http"):
+          for part in msg.split(' '):
+            if unicode.toLower(part).startsWith("http"):
+              let title = htmltitle.readTitle(part)
+              if title.len() != 0:
+                await client.privmsg(event.origin, title)
+        if unicode.tolower(msg).startsWith("!say"):
+          await client.privmsg(event.origin, "You just said it.")
+      echo(event.raw)
+  except:
+    let
+      e = getCurrentException()
+      msg = getCurrentExceptionMsg()
+    echo "Got exception ", repr(e), " with message ", msg
 
 var client = newAsyncIrc(
   server,
