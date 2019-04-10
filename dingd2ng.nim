@@ -1,8 +1,12 @@
 import irc, asyncdispatch, strutils
 import htmltitle, unicode
 import streams
-
+import logging
 import docopt
+
+var L = newFileLogger("dingd1ng.log", fmtStr = verboseFmtStr)
+
+addHandler(L)
 
 let doc = """
 dingd2ng IRC Bot. 
@@ -62,7 +66,6 @@ proc onIrcEvent(client: AsyncIrc, event: IrcEvent) {.async.} =
     of EvMsg:
       if event.cmd == MPrivMsg:
         var msg = event.params[event.params.len-1]
-        # if msg == "!test": await client.privmsg(event.origin, "hello")
         if msg == "!lag":
           await client.privmsg(event.origin, formatFloat(client.getLag))
         if unicode.toLower(msg).contains("http"):
@@ -78,7 +81,7 @@ proc onIrcEvent(client: AsyncIrc, event: IrcEvent) {.async.} =
     let
       e = getCurrentException()
       msg = getCurrentExceptionMsg()
-    echo "Got exception ", repr(e), " with message ", msg
+    error("Got exception ", repr(e), " with message ", msg)
 
 var client = newAsyncIrc(
   server,
