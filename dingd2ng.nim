@@ -48,8 +48,6 @@ if args["--pw-file"]:
 if args["--post-connect"]:
   connect_cmds = splitLines($args["--post-connect"])
 
-echo("Password is: " & pass)
-
 echo("***********************************************************************")
 echo("** Connecting to IRC on server: ", server, " with nickname ", nickname,
      " in channels: ", channels)
@@ -65,6 +63,7 @@ proc onIrcEvent(client: AsyncIrc, event: IrcEvent) {.async.} =
       await client.reconnect()
     of EvMsg:
       if event.cmd == MPrivMsg:
+        echo(event.raw)
         var msg = event.params[event.params.len-1]
         if msg == "!lag":
           await client.privmsg(event.origin, formatFloat(client.getLag))
@@ -76,7 +75,7 @@ proc onIrcEvent(client: AsyncIrc, event: IrcEvent) {.async.} =
                 await client.privmsg(event.origin, title)
         if unicode.tolower(msg).startsWith("!say"):
           await client.privmsg(event.origin, "You just said it.")
-      echo(event.raw)
+#      echo(event.raw)
   except:
     let
       e = getCurrentException()
